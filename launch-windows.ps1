@@ -33,12 +33,18 @@ function Fail($msg) {
 # 1. Locate a Python interpreter (3.11+ recommended)
 Write-Step "Checking for Python"
 $pyExe = $null
-foreach ($c in @("python", "py")) {
+foreach ($c in @("py", "python")) {
     $cmd = Get-Command $c -ErrorAction SilentlyContinue
     if ($cmd) { $pyExe = $cmd.Source; break }
 }
 if (-not $pyExe) {
     Fail "Python not found on PATH. Install Python 3.11+ from https://www.python.org/downloads/ (check 'Add to PATH'), then re-run this script."
+}
+if ($pyExe -like "*WindowsApps*python.exe") {
+    $pyCmd = Get-Command py -ErrorAction SilentlyContinue
+    if ($pyCmd) {
+        $pyExe = $pyCmd.Source
+    }
 }
 Write-Host ("Using Python: " + $pyExe)
 
