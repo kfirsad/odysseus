@@ -1,10 +1,13 @@
 import os
 import logging
 from datetime import datetime
+from pathlib import Path
 from sqlalchemy import create_engine, Column, String, Text, Boolean, DateTime, Integer, ForeignKey, JSON, Index, func, text
 from sqlalchemy.types import TypeDecorator
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import relationship, sessionmaker, backref
+
+from src.runtime_paths import get_app_root
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +24,27 @@ class TimestampMixin:
     def updated_at(cls):
         return Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
+# Ensure the writable data directory exists before SQLite connects.
+APP_ROOT = Path(get_app_root())
+DATA_DIR = APP_ROOT / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _default_database_url() -> str:
+    return f"sqlite:///{(DATA_DIR / 'app.db').as_posix()}"
+
+
+def _normalize_sqlite_url(url: str) -> str:
+    if not url.startswith("sqlite:///"):
+        return url
+    db_path = url.replace("sqlite:///", "", 1)
+    if os.path.isabs(db_path):
+        return url
+    return f"sqlite:///{(APP_ROOT / db_path).resolve().as_posix()}"
+
+
 # Get database URL from environment, default to SQLite
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/app.db")
+DATABASE_URL = _normalize_sqlite_url(os.getenv("DATABASE_URL", _default_database_url()))
 
 # Create engine
 engine = create_engine(
@@ -1433,7 +1455,7 @@ def _migrate_seed_email_account():
         import json as _json
         import uuid as _uuid
         from pathlib import Path
-        settings_file = Path("data/settings.json")
+        settings_file = DATA_DIR / "settings.json"
         if not settings_file.exists():
             return
         try:

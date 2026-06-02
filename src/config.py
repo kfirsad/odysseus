@@ -4,6 +4,8 @@ from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, field_validator
 
+from src.runtime_paths import get_app_root
+
 # Cross-platform OS flag, exposed here so callers can `from src.config import
 # IS_WINDOWS`. Defined locally (a trivial `os.name == "nt"`) rather than imported
 # from core.platform_compat, to keep this dependency-light config module from
@@ -17,7 +19,7 @@ IS_WINDOWS = os.name == "nt"
 class DataConfig(BaseSettings):
     """Configuration for data storage and file handling."""
     # Base directory
-    base_dir: Path = Field(default=Path(__file__).parent.parent, description="Base directory for the application")
+    base_dir: Path = Field(default=Path(get_app_root()), description="Base directory for the application")
     
     # Data paths
     data_dir: Path = Field(default=Path("data"), description="Main data directory")
@@ -136,7 +138,7 @@ class AppConfig(BaseSettings):
         if isinstance(v, dict) and "base_dir" in v:
             base_dir = v["base_dir"]
         else:
-            base_dir = Path(__file__).parent.parent
+            base_dir = Path(get_app_root())
         
         # Convert string paths to Path objects relative to base_dir
         data_dir = base_dir / "data"

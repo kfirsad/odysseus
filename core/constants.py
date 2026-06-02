@@ -2,10 +2,12 @@
 """Application-wide constants and configuration values."""
 import os
 
+from src.runtime_paths import get_app_root
+
 APP_VERSION = "0.9.1"
 
 # Base paths
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/"
+BASE_DIR = os.path.join(get_app_root(), "")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 DATA_DIR = os.path.join(BASE_DIR, "data")
 

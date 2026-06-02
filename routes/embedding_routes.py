@@ -7,12 +7,12 @@ import logging
 import asyncio
 from pathlib import Path
 from fastapi import APIRouter, HTTPException, Form, Depends
-from core.constants import BASE_DIR
 from core.middleware import require_admin
+from src.runtime_paths import get_app_root
 
 logger = logging.getLogger(__name__)
 
-_ENDPOINT_FILE = os.path.join(BASE_DIR, "data", "embedding_endpoint.json")
+_ENDPOINT_FILE = os.path.join(get_app_root(), "data", "embedding_endpoint.json")
 
 # Track in-progress downloads
 _downloading: dict = {}
@@ -39,7 +39,7 @@ def _cache_dir() -> str:
     if env:
         return env
     return os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        get_app_root(),
         "data", "fastembed_cache",
     )
 

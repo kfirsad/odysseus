@@ -29,6 +29,8 @@ import numpy as np
 import httpx
 from typing import List, Optional
 
+from src.runtime_paths import get_app_root
+
 logger = logging.getLogger(__name__)
 
 _DEFAULT_MODEL = "all-minilm:l6-v2"
@@ -116,7 +118,7 @@ class FastEmbedClient:
         # the download lands exactly where the admin panel's _is_downloaded()
         # check looks (both default to this same path).
         cache_dir = os.getenv("FASTEMBED_CACHE_PATH") or os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            get_app_root(),
             "data", "fastembed_cache",
         )
         os.makedirs(cache_dir, exist_ok=True)
@@ -187,7 +189,7 @@ def _load_persisted_endpoint() -> dict:
     """Load the custom embedding endpoint saved from the admin panel."""
     try:
         endpoint_file = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            get_app_root(),
             "data", "embedding_endpoint.json",
         )
         if os.path.exists(endpoint_file):

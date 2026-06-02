@@ -6,6 +6,8 @@ import logging
 import time
 from pathlib import Path
 
+from src.runtime_paths import get_app_root
+
 logger = logging.getLogger(__name__)
 
 rag_instance = None
@@ -41,7 +43,7 @@ def get_rag_manager():
     try:
         from src.rag_vector import VectorRAG
 
-        base_dir = Path(__file__).parent.parent
+        base_dir = Path(get_app_root())
         persist_dir = os.path.join(base_dir, "data", "rag")
 
         rag_instance = VectorRAG(persist_directory=persist_dir)
