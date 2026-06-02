@@ -2232,6 +2232,61 @@
         <!-- ═══ SYSTEM TAB ═══ -->
         <div data-settings-panel="system" class="hidden">
 
+          <div class="admin-card" id="settings-system-logs-card">
+            <h2>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;opacity:0.6">
+                <polyline points="4 17 10 11 4 5"></polyline>
+                <line x1="12" y1="19" x2="20" y2="19"></line>
+              </svg>
+              Terminal Logs
+            </h2>
+            <div class="admin-toggle-sub" style="margin-bottom:12px;">Live diagnostic logs and system output from the Odysseus process.</div>
+
+            <div class="settings-col" style="gap:10px;">
+              <!-- Controls row -->
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                <!-- Search input -->
+                <input type="text" id="log-search-input" placeholder="Search logs..." style="padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--fg);font-family:inherit;font-size:11px;flex:1;min-width:140px;">
+
+                <!-- Level select -->
+                <select id="log-level-select" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--fg);font-family:inherit;font-size:11px;min-width:90px;">
+                  <option value="ALL">All Levels</option>
+                  <option value="INFO">INFO</option>
+                  <option value="WARNING">WARNING</option>
+                  <option value="ERROR">ERROR</option>
+                  <option value="DEBUG">DEBUG</option>
+                </select>
+
+                <!-- Limit select -->
+                <select id="log-limit-select" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--fg);font-family:inherit;font-size:11px;min-width:90px;">
+                  <option value="100">100 lines</option>
+                  <option value="200" selected>200 lines</option>
+                  <option value="500">500 lines</option>
+                  <option value="1000">1000 lines</option>
+                </select>
+
+                <!-- Refresh Button -->
+                <button type="button" class="admin-btn-sm" id="log-refresh-btn" style="height:27px;display:flex;align-items:center;gap:4px;padding:0 8px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                  Refresh
+                </button>
+
+                <!-- Auto-refresh switch -->
+                <div style="display:inline-flex;align-items:center;gap:6px;font-size:11px;user-select:none;margin-left:auto;">
+                  <label class="admin-switch" title="Auto-polling every 3 seconds">
+                    <input type="checkbox" id="log-auto-refresh-toggle">
+                    <span class="admin-slider"></span>
+                  </label>
+                  <span>Auto-poll</span>
+                </div>
+              </div>
+
+              <!-- Console container -->
+              <div id="log-console-container" style="background:#13151a;border:1px solid var(--border);border-radius:6px;padding:12px;font-family:Consolas, 'Fira Code', Monaco, 'Courier New', monospace;font-size:11px;height:280px;max-height:280px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;color:#d1d4e0;box-shadow:inset 0 2px 8px rgba(0,0,0,0.5);">
+                <div style="color:var(--color-text-dim, #7f8c8d);font-style:italic;">Initializing logs terminal viewer...</div>
+              </div>
+            </div>
+          </div>
           <div class="admin-card">
             <h2><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;opacity:0.6"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Data Backup</h2>
             <div class="admin-toggle-sub" style="margin-bottom:8px">Export or import your user data (memories, presets, settings, skills, preferences) as a JSON file.</div>
