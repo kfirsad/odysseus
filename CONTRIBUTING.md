@@ -29,7 +29,15 @@ pip install -r requirements.txt
 python -m uvicorn app:app --host 0.0.0.0 --port 7000
 ```
 
-Windows is not actively tested. Docker on Linux or a Linux/macOS manual install is the safer path for now.
+Windows development and packaging are fully supported using native PowerShell scripts. You can run the local development server or compile portable builds directly on Windows:
+
+```powershell
+# Run the local development server (creates venv and installs dependencies automatically)
+powershell -ExecutionPolicy Bypass -File .\launch-windows.ps1
+
+# Package a portable, zero-dependency Windows distribution (.exe)
+powershell -ExecutionPolicy Bypass -File .\build-windows-portable.ps1
+```
 
 ## Running Checks
 
