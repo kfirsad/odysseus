@@ -25,6 +25,7 @@ A self-hosted AI workspace -- meant to be the self-hosted version of the UI expe
   - **Calendar** -- Local-first calendar with CalDAV sync to Radicale / Nextcloud / Apple / Fastmail.<br>　<sub>CalDAV pull · .ics import/export · per-calendar colors · agent-aware</sub>
   - **Works on mobile** -- looks and runs great on your phone, not just desktop.<br>　<sub>responsive · installable (PWA) · touch gestures</sub>
   - **Extras** -- more to explore, happy if you give it a go!<br>　<sub>image editor · theme editor · file uploads (vision + PDF) · web search · presets · sessions · 2FA</sub>
+  - **System Logs & Diagnostics** -- A premium real-time log terminal embedded in Settings -> System. Monitor background processes, system errors, and agent chains natively in the browser.<br>　<sub>live polling · regular expression search · color-coded levels · admin-gated security</sub>
 
 ## Demo
 A full, hover-to-play tour lives on the landing page (`docs/index.html`).
@@ -338,6 +339,43 @@ Odysseus email accounts currently use IMAP/SMTP username-password auth. Outlook
 and Microsoft 365 generally require OAuth instead, so normal Microsoft mailbox
 passwords will fail. See [docs/email-outlook.md](docs/email-outlook.md) for the
 current limitation and the planned integration direction.
+
+### Portable Windows Build & Pre-built Executable
+
+Odysseus can be deployed instantly on Windows using a zero-dependency, self-contained executable. This completely bypasses the need for manual Git cloning, Python 3.11 setups, or command-line scripting.
+
+#### 1. Running via the Pre-built `Odysseus.exe`
+- **Double-Click Launch**: Simply navigate to the `dist\Odysseus` directory and double-click `Odysseus.exe`.
+- **Instant Splash Loader**: Spawns an immediate, borderless dark-themed loading window (`⛵ Odysseus - Launching background services...`) in less than 100ms. This provides instant visual feedback while heavy AI libraries (ONNX, ChromaDB, FastAPI) initialize.
+- **Windowless Background Run**: The command-line console is fully suppressed. No cluttered black terminal windows remain open on your screen.
+- **Automated Web Launch**: Once background services are running, the application automatically launches your default web browser to the dashboard (`http://127.0.0.1:7000`).
+
+#### 2. System Tray Controls
+When active, Odysseus runs seamlessly in the background and places a custom sailing boat brand icon in your system tray:
+- **Double-Click**: Re-opens or focuses the Odysseus dashboard in your default browser.
+- **Right-Click Context Menu**:
+  - **Open Odysseus**: Opens the dashboard.
+  - **Exit**: Cleanly shuts down the backend Uvicorn server, terminates background threads, and releases all database and file locks (`os._exit(0)`).
+
+#### 3. Packaging from Source (Optional)
+If you want to package the app into the portable Windows folder yourself from a source code tree:
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build-windows-portable.ps1
+```
+This builds and packages the standalone executable inside `dist\Odysseus\`. You can share the entire folder or zip it for easy distribution across target machines.
+
+---
+
+## Diagnostics & System Logs Console
+
+Odysseus features an administrative diagnostics logs console embedded directly within the web workspace at **Settings -> System**.
+
+### Key Features:
+- **Admin-Gated Security**: Strictly protected on the backend using `require_admin(request)` checks. System logs can only be viewed by authenticated administrators.
+- **Real-Time Polling**: Includes a real-time auto-polling toggle switch. You can set lines to load (50, 100, 200, 500 lines) to keep memory consumption low.
+- **Console Highlighting**: Log outputs are formatted and color-coded natively in a monospaced terminal card (Emerald Green for `INFO`, Amber for `WARNING`, Bright Red for `ERROR`, and Gray for `DEBUG`).
+- **Interactive Search & Filtering**: Built-in Regex (regular expression) search bar allows you to filter output live. Search for specific modules (e.g. `uvicorn`, `chroma`, `agent_loop`) to debug your agent cycles or vector databases.
+- **Auto-Scroll Locking**: Automatically scrolls down to the newest entries as system actions are recorded.
 
 ## Security Notes
 Odysseus is a self-hosted workspace with powerful local tools: shell access, file uploads, model downloads, web research, email/calendar integrations, and API tokens. Treat it like an admin console.
