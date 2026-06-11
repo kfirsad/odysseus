@@ -2493,18 +2493,74 @@ function initDangerZone() {
    ═══════════════════════════════════════════ */
 let logsPollInterval = null;
 let isLogsPolling = false;
+let cachedLogs = [];
 
-async function loadLogs(isAutoPoll = false) {
+function renderLogs(isAutoPoll = false) {
   const consoleContainer = el('log-console-container');
   const levelSelect = el('log-level-select');
-  const limitSelect = el('log-limit-select');
   const searchInput = el('log-search-input');
 
   if (!consoleContainer) return;
 
-  const limit = limitSelect ? limitSelect.value : 200;
   const levelFilter = levelSelect ? levelSelect.value : 'ALL';
   const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+  let logs = cachedLogs;
+
+  // Filter by level locally
+  if (levelFilter !== 'ALL') {
+    logs = logs.filter(line => line.includes(` - ${levelFilter} - `));
+  }
+
+  // Filter by search query locally
+  if (searchQuery) {
+    logs = logs.filter(line => line.toLowerCase().includes(searchQuery));
+  }
+
+  if (logs.length === 0) {
+    consoleContainer.innerHTML = `<div style="color:var(--color-text-dim, #7f8c8d); font-style:italic; font-family:inherit;">No logs found matching current filters.</div>`;
+    return;
+  }
+
+  // Preserve scroll position if user is reading previous logs
+  const atBottom = consoleContainer.scrollHeight - consoleContainer.scrollTop - consoleContainer.clientHeight < 40;
+
+  consoleContainer.innerHTML = logs.map(line => {
+    let color = '#d1d4e0';
+
+    if (line.includes(' - INFO - ')) {
+      color = '#10b981'; // emerald green
+    } else if (line.includes(' - WARNING - ')) {
+      color = '#f59e0b'; // amber
+    } else if (line.includes(' - ERROR - ') || line.includes(' - CRITICAL - ')) {
+      color = '#ef4444'; // light red
+    } else if (line.includes(' - DEBUG - ')) {
+      color = '#9ca3af'; // gray
+    }
+
+    // XSS safe escape
+    const escaped = line
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+    return `<div style="color:${color}; margin-bottom:3px; line-height:1.4; font-size:11px; font-family:inherit;">${escaped}</div>`;
+  }).join('');
+
+  if (!isAutoPoll || atBottom) {
+    consoleContainer.scrollTop = consoleContainer.scrollHeight;
+  }
+}
+
+async function loadLogs(isAutoPoll = false) {
+  const consoleContainer = el('log-console-container');
+  const limitSelect = el('log-limit-select');
+
+  if (!consoleContainer) return;
+
+  const limit = limitSelect ? limitSelect.value : 200;
 
   try {
     const res = await fetch(`/api/diagnostics/logs?limit=${limit}`, { credentials: 'same-origin' });
@@ -2523,53 +2579,8 @@ async function loadLogs(isAutoPoll = false) {
       return;
     }
 
-    let logs = data.logs;
-
-    // Filter by level locally
-    if (levelFilter !== 'ALL') {
-      logs = logs.filter(line => line.includes(` - ${levelFilter} - `));
-    }
-
-    // Filter by search query locally
-    if (searchQuery) {
-      logs = logs.filter(line => line.toLowerCase().includes(searchQuery));
-    }
-
-    if (logs.length === 0) {
-      consoleContainer.innerHTML = `<div style="color:var(--color-text-dim, #7f8c8d); font-style:italic; font-family:inherit;">No logs found matching current filters.</div>`;
-      return;
-    }
-
-    // Preserve scroll position if user is reading previous logs
-    const atBottom = consoleContainer.scrollHeight - consoleContainer.scrollTop - consoleContainer.clientHeight < 40;
-
-    consoleContainer.innerHTML = logs.map(line => {
-      let color = '#d1d4e0';
-
-      if (line.includes(' - INFO - ')) {
-        color = '#10b981'; // emerald green
-      } else if (line.includes(' - WARNING - ')) {
-        color = '#f59e0b'; // amber
-      } else if (line.includes(' - ERROR - ') || line.includes(' - CRITICAL - ')) {
-        color = '#ef4444'; // light red
-      } else if (line.includes(' - DEBUG - ')) {
-        color = '#9ca3af'; // gray
-      }
-
-      // XSS safe escape
-      const escaped = line
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-
-      return `<div style="color:${color}; margin-bottom:3px; line-height:1.4; font-size:11px; font-family:inherit;">${escaped}</div>`;
-    }).join('');
-
-    if (!isAutoPoll || atBottom) {
-      consoleContainer.scrollTop = consoleContainer.scrollHeight;
-    }
+    cachedLogs = data.logs;
+    renderLogs(isAutoPoll);
   } catch (err) {
     if (!isAutoPoll) {
       consoleContainer.innerHTML = `<div style="color:var(--red); font-weight:600;">Error retrieving logs: ${err.message}</div>`;
@@ -2616,9 +2627,9 @@ function initLogsView() {
   const autoRefreshToggle = el('log-auto-refresh-toggle');
 
   if (refreshBtn) refreshBtn.addEventListener('click', () => loadLogs(false));
-  if (levelSelect) levelSelect.addEventListener('change', () => loadLogs(false));
+  if (levelSelect) levelSelect.addEventListener('change', () => renderLogs(false));
   if (limitSelect) limitSelect.addEventListener('change', () => loadLogs(false));
-  if (searchInput) searchInput.addEventListener('input', () => loadLogs(false));
+  if (searchInput) searchInput.addEventListener('input', () => renderLogs(false));
 
   if (autoRefreshToggle) {
     autoRefreshToggle.addEventListener('change', (e) => {

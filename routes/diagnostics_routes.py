@@ -6,7 +6,7 @@ from typing import Dict, Any
 from fastapi import APIRouter, HTTPException, Form, Request
 
 from services.youtube.youtube_handler import extract_youtube_id, extract_transcript_async
-from core.constants import DEFAULT_HOST, BASE_DIR
+from core.constants import DEFAULT_HOST, DATA_DIR
 from core.middleware import require_admin
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ def setup_diagnostics_routes(
         require_admin(request)
         try:
             import os
-            log_file = os.path.join(BASE_DIR, "logs", "app.log")
+            log_file = os.path.join(DATA_DIR, "logs", "app.log")
             if not os.path.exists(log_file):
                 return {"status": "success", "logs": []}
 

@@ -69,10 +69,31 @@ from src.generated_images import GENERATED_IMAGE_HEADERS, resolve_generated_imag
 from starlette.responses import RedirectResponse
 
 # ========= LOGGING =========
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+import logging.handlers
+from core.constants import DATA_DIR
+
+_log_dir = os.path.join(DATA_DIR, "logs")
+os.makedirs(_log_dir, exist_ok=True)
+_log_file = os.path.join(_log_dir, "app.log")
+
+_root_logger = logging.getLogger()
+_root_logger.setLevel(logging.INFO)
+_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# Clear existing handlers to avoid duplicates
+for _h in list(_root_logger.handlers):
+    _root_logger.removeHandler(_h)
+
+_console_h = logging.StreamHandler()
+_console_h.setFormatter(_formatter)
+_root_logger.addHandler(_console_h)
+
+_file_h = logging.handlers.RotatingFileHandler(
+    _log_file, maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8"
 )
+_file_h.setFormatter(_formatter)
+_root_logger.addHandler(_file_h)
+
 logger = logging.getLogger(__name__)
 
 # ========= APP =========
