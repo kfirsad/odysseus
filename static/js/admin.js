@@ -2494,6 +2494,7 @@ function initDangerZone() {
 let logsPollInterval = null;
 let isLogsPolling = false;
 let cachedLogs = [];
+let logsAbortController = null;
 
 function renderLogs(isAutoPoll = false) {
   const consoleContainer = el('log-console-container');
@@ -2518,7 +2519,7 @@ function renderLogs(isAutoPoll = false) {
   }
 
   if (logs.length === 0) {
-    consoleContainer.innerHTML = `<div style="color:var(--color-text-dim, #7f8c8d); font-style:italic; font-family:inherit;">No logs found matching current filters.</div>`;
+    consoleContainer.innerHTML = '<div class="settings-system-logs-placeholder">No logs found matching current filters.</div>';
     return;
   }
 
@@ -2526,16 +2527,16 @@ function renderLogs(isAutoPoll = false) {
   const atBottom = consoleContainer.scrollHeight - consoleContainer.scrollTop - consoleContainer.clientHeight < 40;
 
   consoleContainer.innerHTML = logs.map(line => {
-    let color = '#d1d4e0';
+    let levelClass = 'log-line-default';
 
     if (line.includes(' - INFO - ')) {
-      color = '#10b981'; // emerald green
+      levelClass = 'log-line-info';
     } else if (line.includes(' - WARNING - ')) {
-      color = '#f59e0b'; // amber
+      levelClass = 'log-line-warning';
     } else if (line.includes(' - ERROR - ') || line.includes(' - CRITICAL - ')) {
-      color = '#ef4444'; // light red
+      levelClass = 'log-line-error';
     } else if (line.includes(' - DEBUG - ')) {
-      color = '#9ca3af'; // gray
+      levelClass = 'log-line-debug';
     }
 
     // XSS safe escape
@@ -2546,7 +2547,7 @@ function renderLogs(isAutoPoll = false) {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
 
-    return `<div style="color:${color}; margin-bottom:3px; line-height:1.4; font-size:11px; font-family:inherit;">${escaped}</div>`;
+    return `<div class="log-line ${levelClass}">${escaped}</div>`;
   }).join('');
 
   if (!isAutoPoll || atBottom) {
@@ -2562,11 +2563,26 @@ async function loadLogs(isAutoPoll = false) {
 
   const limit = limitSelect ? limitSelect.value : 200;
 
+  if (logsAbortController) {
+    logsAbortController.abort();
+  }
+  logsAbortController = new AbortController();
+  const { signal } = logsAbortController;
+
   try {
-    const res = await fetch(`/api/diagnostics/logs?limit=${limit}`, { credentials: 'same-origin' });
+    const res = await fetch(`/api/diagnostics/logs?limit=${limit}`, {
+      credentials: 'same-origin',
+      signal
+    });
+
     if (!res.ok) {
       if (!isAutoPoll) {
-        consoleContainer.innerHTML = `<div style="color:var(--red); font-weight:600;">Failed to load logs: HTTP ${res.status}</div>`;
+        consoleContainer.innerHTML = '';
+        const errDiv = document.createElement('div');
+        errDiv.style.color = 'var(--red)';
+        errDiv.style.fontWeight = '600';
+        errDiv.textContent = `Failed to load logs: HTTP ${res.status}`;
+        consoleContainer.appendChild(errDiv);
       }
       return;
     }
@@ -2574,7 +2590,12 @@ async function loadLogs(isAutoPoll = false) {
     const data = await res.json();
     if (data.status !== 'success' || !data.logs) {
       if (!isAutoPoll) {
-        consoleContainer.innerHTML = `<div style="color:var(--red); font-weight:600;">Failed to parse logs data</div>`;
+        consoleContainer.innerHTML = '';
+        const errDiv = document.createElement('div');
+        errDiv.style.color = 'var(--red)';
+        errDiv.style.fontWeight = '600';
+        errDiv.textContent = 'Failed to parse logs data';
+        consoleContainer.appendChild(errDiv);
       }
       return;
     }
@@ -2582,8 +2603,20 @@ async function loadLogs(isAutoPoll = false) {
     cachedLogs = data.logs;
     renderLogs(isAutoPoll);
   } catch (err) {
+    if (err.name === 'AbortError') {
+      return; // Silently ignore deliberate abort
+    }
     if (!isAutoPoll) {
-      consoleContainer.innerHTML = `<div style="color:var(--red); font-weight:600;">Error retrieving logs: ${err.message}</div>`;
+      consoleContainer.innerHTML = '';
+      const errDiv = document.createElement('div');
+      errDiv.style.color = 'var(--red)';
+      errDiv.style.fontWeight = '600';
+      errDiv.textContent = `Error retrieving logs: ${err.message}`;
+      consoleContainer.appendChild(errDiv);
+    }
+  } finally {
+    if (logsAbortController?.signal === signal) {
+      logsAbortController = null;
     }
   }
 }
@@ -2668,6 +2701,7 @@ function refreshAll() {
   loadBuiltinTools();
   loadMcpServers();
   loadTokens();
+  loadLogs(false);
 }
 
 /* ═══════════════════════════════════════════

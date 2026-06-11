@@ -1,6 +1,7 @@
 """Diagnostics routes — /api/db/stats, /api/rag/stats, /api/test/youtube, /api/test-research."""
 
 import logging
+import os
 from typing import Dict, Any
 
 from fastapi import APIRouter, HTTPException, Form, Request
@@ -31,8 +32,8 @@ def setup_diagnostics_routes(
     @router.get("/api/diagnostics/logs")
     async def get_diagnostics_logs(request: Request, limit: int = 200) -> Dict[str, Any]:
         require_admin(request)
+        limit = max(1, min(limit, 1000))
         try:
-            import os
             log_file = os.path.join(DATA_DIR, "logs", "app.log")
             if not os.path.exists(log_file):
                 return {"status": "success", "logs": []}

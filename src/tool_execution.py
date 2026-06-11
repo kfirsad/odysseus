@@ -71,9 +71,7 @@ def _is_sensitive_path(resolved: str) -> bool:
     """Return True if *resolved* falls under a sensitive directory or
     matches a sensitive filename — regardless of what root it sits under.
     """
-    # Use pathlib to split path components platform-independently (e.g. forward vs back slashes)
-    import pathlib
-    parts = pathlib.Path(resolved).parts
+    parts = resolved.split(os.sep)
     filenames: set[str] = {parts[-1]} if parts else set()
 
     # Check if any path component is a sensitive directory.
@@ -99,13 +97,6 @@ def _tool_path_roots() -> list[str]:
     # Project data directory — the agent's primary workspace.
     from src.constants import DATA_DIR
     roots.append(DATA_DIR)
-
-    # Cross-platform system temporary directory.
-    import tempfile
-    try:
-        roots.append(tempfile.gettempdir())
-    except Exception:
-        pass
 
     # /tmp (and its macOS realpath /private/tmp).
     roots.append("/tmp")
