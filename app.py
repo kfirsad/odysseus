@@ -121,29 +121,10 @@ from src.generated_images import GENERATED_IMAGE_HEADERS, resolve_generated_imag
 from starlette.responses import RedirectResponse
 
 # ========= LOGGING =========
-import logging.handlers
-logs_dir = os.path.join(BASE_DIR, "logs")
-os.makedirs(logs_dir, exist_ok=True)
-log_file_path = os.path.join(logs_dir, "app.log")
-
-# Basic configuration handles stdout
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
 )
-
-# Append RotatingFileHandler to root logger
-root_logger = logging.getLogger()
-file_handler = logging.handlers.RotatingFileHandler(
-    log_file_path,
-    maxBytes=5 * 1024 * 1024,  # 5MB
-    backupCount=3,
-    encoding="utf-8"
-)
-file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-file_handler.setLevel(logging.INFO)
-root_logger.addHandler(file_handler)
-
 logger = logging.getLogger(__name__)
 
 # ========= APP =========
