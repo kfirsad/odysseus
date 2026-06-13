@@ -2,7 +2,7 @@ import os
 import sys
 from unittest import mock
 import pytest
-from src.runtime_paths import get_app_root
+from src.runtime_paths import get_app_root, get_default_data_dir
 
 
 def test_get_app_root_normal_run():
@@ -33,3 +33,18 @@ def test_get_app_root_frozen_without_meipass():
             delattr(sys, "_MEIPASS")
         app_root = get_app_root()
         assert app_root == os.path.abspath("mock_exe_dir")
+
+
+def test_get_default_data_dir_normal():
+    """Verify that get_default_data_dir resolves to get_app_root() / 'data' when not frozen."""
+    with mock.patch.object(sys, "frozen", False, create=True):
+        res = get_default_data_dir()
+        assert res == os.path.join(get_app_root(), "data")
+
+
+def test_get_default_data_dir_frozen():
+    """Verify that get_default_data_dir resolves to a persistent user path under ~ when frozen."""
+    with mock.patch.object(sys, "frozen", True, create=True):
+        res = get_default_data_dir()
+        expected = os.path.join(os.path.expanduser("~"), ".odysseus", "data")
+        assert res == expected
